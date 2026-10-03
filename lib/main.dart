@@ -8,7 +8,7 @@ void main() {
 
 class StudentService {
   static Future<Map<String, dynamic>> loadStudentData() async {
-    final jsonString = await rootBundle.loadString('assets/data/salah.json');
+    final jsonString = await rootBundle.loadString('assets/data/student_data.json');
     return jsonDecode(jsonString) as Map<String, dynamic>;
   }
 }
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LearningDashboard(),
+      home: Tahap3Page(),
     );
   }
 }
@@ -102,6 +102,10 @@ class _LearningDashboardState extends State<LearningDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final orientation = MediaQuery.of(context).orientation;
+    final isCompact = size.width < 600;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Learning Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -136,6 +140,32 @@ class _LearningDashboardState extends State<LearningDashboard> {
 
             return Column(
               children: [
+                Container(
+                  width: double.infinity,
+                  color: isCompact ? Colors.blue.shade100 : Colors.green.shade100,
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      const Text(
+                        '2415051023 - Dewa Putu Bagus Mahadinata',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('Width: ${size.width.toStringAsFixed(0)} | Height: ${size.height.toStringAsFixed(0)}'),
+                      Text('Orientation: ${orientation.name}'),
+                      Text(
+                        isCompact ? 'Compact' : 'Wide',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isCompact ? Colors.blue.shade700 : Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // --- Sisa UI Dashboard kamu tetap aman di bawah sini ---
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -191,7 +221,7 @@ class _LearningDashboardState extends State<LearningDashboard> {
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: statusColor.withOpacity(0.3)),
+                          side: BorderSide(color: statusColor.withValues(alpha: 0.3)),
                         ),
                         child: ListTile(
                           leading: Icon(statusIcon, color: statusColor, size: 32),
@@ -210,6 +240,107 @@ class _LearningDashboardState extends State<LearningDashboard> {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class Tahap3Page extends StatelessWidget {
+  const Tahap3Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tahap 3: LayoutBuilder'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
+      // LayoutBuilder membaca batas maksimal lebar dari parent
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Breakpoint: Compact (< 600)
+          if (constraints.maxWidth < 600) {
+            return const CompactLayout();
+          } 
+          // Breakpoint: Medium (600 - 839)
+          else if (constraints.maxWidth < 840) {
+            return const MediumLayout();
+          } 
+          // Breakpoint: Expanded (>= 840)
+          else {
+            return const ExpandedLayout();
+          }
+        },
+      ),
+    );
+  }
+}
+
+class CompactLayout extends StatelessWidget {
+  const CompactLayout({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.blue.shade100,
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.phone_android, size: 80, color: Colors.blue),
+          Text('2415051023 - Dewa Putu Bagus Mahadinata', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('Compact Layout (< 600px)', style: TextStyle(fontSize: 20)),
+        ],
+      ),
+    );
+  }
+}
+
+class MediumLayout extends StatelessWidget {
+  const MediumLayout({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.green.shade100,
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.tablet_mac, size: 80, color: Colors.green),
+          SizedBox(width: 20),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('2415051023 - Dewa Putu Bagus Mahadinata', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Medium Layout (600-839px)', style: TextStyle(fontSize: 24)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpandedLayout extends StatelessWidget {
+  const ExpandedLayout({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.orange.shade100,
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.desktop_windows, size: 100, color: Colors.orange),
+          SizedBox(width: 40),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('2415051023 - Dewa Putu Bagus Mahadinata', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+              Text('Expanded Layout (>= 840px)', style: TextStyle(fontSize: 32)),
+            ],
+          ),
+        ],
       ),
     );
   }
