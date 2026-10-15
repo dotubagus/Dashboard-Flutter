@@ -445,23 +445,80 @@ class CourseDetailPage extends StatelessWidget {
   }
 }
 
+// ----------------------------------------------------------------------
+// TAHAP 4: Eksperimen ValueNotifier pada Halaman Profil
+// ----------------------------------------------------------------------
 class ProfileFeedbackPage extends StatefulWidget {
   final Map<String, dynamic> student;
   const ProfileFeedbackPage({super.key, required this.student});
+
   @override
   State<ProfileFeedbackPage> createState() => _ProfileFeedbackPageState();
 }
 
 class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
+  // 1. Buat ValueNotifier untuk satu nilai sederhana (Target Jam Belajar)
+  final ValueNotifier<int> _targetBelajar = ValueNotifier<int>(0);
+
+  @override
+  void dispose() {
+    // ValueNotifier wajib di-dispose untuk mencegah kebocoran memori (memory leak)
+    _targetBelajar.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Profil & Target'), backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IdentityHeader(student: widget.student),
+            const SizedBox(height: 30),
+            const Text('Eksperimen Tahap 4: ValueNotifier', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
+            const SizedBox(height: 16),
+            
+            // 2. Tampilkan nilai menggunakan ValueListenableBuilder
+            // Hanya bagian di dalam builder ini yang akan di-rebuild saat _targetBelajar berubah!
+            ValueListenableBuilder<int>(
+              valueListenable: _targetBelajar,
+              builder: (context, value, child) {
+                return Card(
+                  color: Colors.indigo.shade50,
+                  elevation: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(
+                      'Target Belajar Mingguan: $value Jam',
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo),
+                    ),
+                  ),
+                );
+              },
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // 3. Button untuk mengubah value
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // MENGUBAH VALUE TANPA SETSTATE()
+                  // Saat value ditambahkan, ValueListenableBuilder otomatis bereaksi
+                  _targetBelajar.value += 1; 
+                },
+                icon: const Icon(Icons.add_alarm),
+                label: const Text('Tambah 1 Jam Target'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+              ),
+            )
+          ],
+        ),
       ),
-      body: const Center(child: Text('Halaman Profil')),
     );
   }
 }
