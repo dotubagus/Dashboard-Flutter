@@ -2,9 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:provider/provider.dart';
+import 'course_provider.dart';
 
 void main() {
-  runApp(const CourseExplorerApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CourseProvider(),
+      child: const CourseExplorerApp(),
+    ),
+  );
 }
 
 const String studentName = 'Dewa Putu Bagus Mahadinata';
