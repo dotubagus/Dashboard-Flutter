@@ -1,17 +1,22 @@
-# flutter_ui_fundamentals
+# Course Explorer v2
 
-A new Flutter project.
+Nama: Dewa Putu Bagus Mahadinata
+NIM: 2415051023
 
-## Getting Started
+## Arsitektur
 
-This project is a starting point for a Flutter application.
+Arah dependency: **Screen/Widget → Provider → Repository → Service (data source)**.
+Layer di bawah tidak boleh meng-import layer di atasnya.
 
-A few resources to get you started if this is your first Flutter project:
+## Tanggung jawab tiap folder (`lib/`)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| Folder / file | Tanggung jawab |
+|---|---|
+| `main.dart` | Titik masuk aplikasi. Merakit dependency (Service → Repository → Provider), memasang `ChangeNotifierProvider`, dan mendefinisikan `MaterialApp`. |
+| `constants.dart` | Konstanta global, yaitu identitas mahasiswa (`studentName`, `studentId`). |
+| `models/` | Struktur data (`Course`) dan konversi JSON lewat `Course.fromJson`. Tidak berisi UI maupun akses data. |
+| `services/` | Data source. Satu-satunya tempat yang memakai `rootBundle` dan `jsonDecode` untuk membaca `assets/data/student_data.json`. Tidak berisi widget. |
+| `repositories/` | Perantara antara Provider dan Service. Menyediakan API data (`getCourses()`), sehingga Provider tidak tahu data berasal dari mana. |
+| `providers/` | State management (`CourseProvider`, `ChangeNotifier`). Menyimpan state courses, loading, error, dan favorites, serta memanggil `notifyListeners()`. Tidak menyimpan `BuildContext`. |
+| `screens/` | Halaman penuh (Root, ResponsiveShell, Home, Courses, Favorites, Detail, Profile). Membaca state dengan `context.watch()` dan memicu aksi dengan `context.read()`. |
+| `widgets/` | Komponen UI kecil yang dipakai ulang (`CourseItemCard`, `SummaryCard`, `IdentityHeader`). |
