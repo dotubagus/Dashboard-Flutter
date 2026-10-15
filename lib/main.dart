@@ -1,14 +1,19 @@
+// Nama: Dewa Putu Bagus Mahadinata
+// NIM: 2415051023
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'student_service.dart';
 import 'repositories/course_repository.dart';
+import 'models/course.dart';
 
 void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) =>
-          CourseProvider(CourseRepository(StudentService()))..fetchCourses(),
+          CourseProvider(CourseRepository(StudentService()))..loadCourses(),
       child: const CourseExplorerApp(),
     ),
   );
@@ -29,58 +34,81 @@ class CourseExplorerApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
       ),
-      home: const MainDataLoader(),
+      home: const CourseRoot(),
     );
   }
 }
 
-class MainDataLoader extends StatefulWidget {
-  const MainDataLoader({super.key});
-
-  @override
-  State<MainDataLoader> createState() => _MainDataLoaderState();
-}
-
-class _MainDataLoaderState extends State<MainDataLoader> {
-  late Future<Map<String, dynamic>> _futureData;
-
-  @override
-  void initState() {
-    super.initState();
-    _futureData = StudentService.loadStudentData();
-  }
+// ----------------------------------------------------------------------
+// TAHAP 11: UI hanya membaca state dari Provider (loading/error/data)
+// ----------------------------------------------------------------------
+class CourseRoot extends StatelessWidget {
+  const CourseRoot({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _futureData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Gagal memuat data JSON: ${snapshot.error}'),
-            );
-          }
-          final data = snapshot.data!;
-          return ResponsiveShell(
-            student: data['student'] as Map<String, dynamic>,
-            courses: data['courses'] as List<dynamic>,
-          );
-        },
-      ),
+    final provider = context.watch<CourseProvider>();
+
+    // State: Loading
+    if (provider.isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Memuat data course...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // State: Error
+    if (provider.errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 12),
+                const Text(
+                  'Gagal memuat data',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(provider.errorMessage!, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => context.read<CourseProvider>().loadCourses(),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // State: Success
+    return ResponsiveShell(
+      student: const {'name': studentName, 'nim': studentId},
+      courses: provider.courses,
     );
   }
 }
 
 // ----------------------------------------------------------------------
-// RESPONSIVE SHELL (Dibersihkan dari Prop Drilling State)
+// RESPONSIVE SHELL
 // ----------------------------------------------------------------------
 class ResponsiveShell extends StatefulWidget {
   final Map<String, dynamic> student;
-  final List<dynamic> courses;
+  final List<Course> courses;
 
   const ResponsiveShell({
     super.key,
@@ -180,7 +208,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 // ----------------------------------------------------------------------
 class HomePage extends StatelessWidget {
   final Map<String, dynamic> student;
-  final List<dynamic> courses;
+  final List<Course> courses;
 
   const HomePage({
     super.key,
@@ -190,14 +218,15 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TAHAP 11: memakai properti objek Course, bukan key Map
     int totalSks = 0;
     int completedTopics = 0;
-    for (var course in courses) {
-      totalSks += (course['credits'] as int);
-      if (course['status'] == 'done') completedTopics++;
+    for (final course in courses) {
+      totalSks += course.credits;
+      if (course.status == 'done') completedTopics++;
     }
 
-    // TAHAP 7: Menggunakan context.watch() untuk membaca dan mendengarkan jumlah favorit
+    // TAHAP 7: context.watch() untuk mendengarkan jumlah favorit
     final favoriteCount = context.watch<CourseProvider>().favorites.length;
 
     return Scaffold(
@@ -261,10 +290,10 @@ class HomePage extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------
-// CoursesPage (Dibersihkan dari parameter callback)
+// CoursesPage
 // ----------------------------------------------------------------------
 class CoursesPage extends StatelessWidget {
-  final List<dynamic> courses;
+  final List<Course> courses;
 
   const CoursesPage({
     super.key,
@@ -292,10 +321,8 @@ class CoursesPage extends StatelessWidget {
               ),
               itemCount: courses.length,
               itemBuilder: (context, index) {
-                final course = courses[index] as Map<String, dynamic>;
-                return CourseItemCard(
-                  course: course,
-                );
+                final course = courses[index];
+                return CourseItemCard(course: course);
               },
             );
           } else {
@@ -303,10 +330,8 @@ class CoursesPage extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               itemCount: courses.length,
               itemBuilder: (context, index) {
-                final course = courses[index] as Map<String, dynamic>;
-                return CourseItemCard(
-                  course: course,
-                );
+                final course = courses[index];
+                return CourseItemCard(course: course);
               },
             );
           }
@@ -320,7 +345,7 @@ class CoursesPage extends StatelessWidget {
 // TAHAP 7: CourseItemCard menggunakan Consumer & context.read()
 // ----------------------------------------------------------------------
 class CourseItemCard extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
 
   const CourseItemCard({
     super.key,
@@ -329,10 +354,9 @@ class CourseItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor = (course['status'] == 'done')
-        ? Colors.green
-        : Colors.orange;
-    final courseCode = course['code'] as String;
+    final Color statusColor =
+        (course.status == 'done') ? Colors.green : Colors.orange;
+    final String courseCode = course.code;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -362,7 +386,7 @@ class CourseItemCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      course['title'],
+                      course.title,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -370,13 +394,13 @@ class CourseItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$courseCode • ${course['credits']} SKS',
+                      '$courseCode • ${course.credits} SKS',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              // TAHAP 7: Consumer membatasi rebuild hanya pada tombol ini saja
+              // TAHAP 7: Consumer membatasi rebuild hanya pada tombol ini
               Consumer<CourseProvider>(
                 builder: (context, provider, child) {
                   final isFav = provider.isFavorite(courseCode);
@@ -386,7 +410,7 @@ class CourseItemCard extends StatelessWidget {
                       color: Colors.red,
                     ),
                     onPressed: () {
-                      // TAHAP 7: context.read() digunakan untuk memanggil aksi di onPressed
+                      // TAHAP 7: context.read() untuk memanggil aksi
                       context.read<CourseProvider>().toggleFavorite(courseCode);
                     },
                   );
@@ -404,7 +428,7 @@ class CourseItemCard extends StatelessWidget {
 // CourseDetailPage (Lengkap dengan Dialog)
 // ----------------------------------------------------------------------
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   const CourseDetailPage({super.key, required this.course});
 
   void _showConfirmDialog(BuildContext context) {
@@ -412,7 +436,7 @@ class CourseDetailPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Daftar Materi Ini?'),
-        content: Text('Apakah Anda ingin mendaftar kelas ${course['title']}?'),
+        content: Text('Apakah Anda ingin mendaftar kelas ${course.title}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -441,11 +465,11 @@ class CourseDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courseCode = course['code'] as String;
+    final String courseCode = course.code;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(course['title']),
+        title: Text(course.title),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
@@ -459,7 +483,7 @@ class CourseDetailPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    course['title'],
+                    course.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -477,7 +501,9 @@ class CourseDetailPage extends StatelessWidget {
                         size: 32,
                       ),
                       onPressed: () {
-                        context.read<CourseProvider>().toggleFavorite(courseCode);
+                        context
+                            .read<CourseProvider>()
+                            .toggleFavorite(courseCode);
                       },
                     );
                   },
@@ -485,11 +511,13 @@ class CourseDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Text('Kode: ${course['code']}', style: const TextStyle(fontSize: 18)),
+            Text('Kode: ${course.code}', style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
-            Text('SKS: ${course['credits']}', style: const TextStyle(fontSize: 18)),
+            Text('SKS: ${course.credits}',
+                style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
-            Text('Status: ${course['status']}', style: const TextStyle(fontSize: 18, color: Colors.blue)),
+            Text('Status: ${course.status}',
+                style: const TextStyle(fontSize: 18, color: Colors.blue)),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -548,7 +576,11 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
             const SizedBox(height: 30),
             const Text(
               'Eksperimen Tahap 4: ValueNotifier',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
             ),
             const SizedBox(height: 16),
             ValueListenableBuilder<int>(
