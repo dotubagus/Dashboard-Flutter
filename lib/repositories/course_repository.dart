@@ -2,8 +2,8 @@
 // NIM: 2415051023
 // lib/repositories/course_repository.dart
 
-import '/models/course.dart';
-import '/student_service.dart';
+import '../models/course.dart';
+import '../services/student_service.dart';
 
 class CourseRepository {
   final StudentService service;
