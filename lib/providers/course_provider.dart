@@ -23,6 +23,9 @@ class CourseProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   Set<String> get favorites => _favorites;
 
+  List<Course> get favoriteCourses =>
+      _courses.where((c) => _favorites.contains(c.code)).toList();
+
   bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
