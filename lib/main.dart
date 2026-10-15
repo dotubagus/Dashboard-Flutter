@@ -46,7 +46,7 @@ class _MainDataLoaderState extends State<MainDataLoader> {
   @override
   void initState() {
     super.initState();
-    _futureData = StudentService.loadStudentData(); // Memuat data JSON saat awal
+    _futureData = StudentService.loadStudentData();
   }
 
   @override
@@ -56,14 +56,12 @@ class _MainDataLoaderState extends State<MainDataLoader> {
         future: _futureData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator()); // Feedback Loading
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Gagal memuat data JSON: ${snapshot.error}'));
           }
-
           final data = snapshot.data!;
-          // Melempar data JSON ke Shell Navigasi Adaptif
           return ResponsiveShell(
             student: data['student'] as Map<String, dynamic>,
             courses: data['courses'] as List<dynamic>,
@@ -89,7 +87,6 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Menyiapkan daftar halaman yang akan ditampilkan
     final List<Widget> pages = [
       HomePage(student: widget.student, courses: widget.courses),
       CoursesPage(courses: widget.courses),
@@ -98,7 +95,6 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // --- LAYOUT EXPANDED (Layar Lebar / Desktop / Tablet Landscape) ---
         if (constraints.maxWidth >= 840) {
           return Scaffold(
             body: Row(
@@ -119,9 +115,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
               ],
             ),
           );
-        }
-        // --- LAYOUT COMPACT / MEDIUM (Layar HP Portrait) ---
-        else {
+        } else {
           return Scaffold(
             body: pages[_selectedIndex],
             bottomNavigationBar: NavigationBar(
@@ -140,19 +134,43 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   }
 }
 
-class HomePage extends StatelessWidget {
+// ----------------------------------------------------------------------
+// TAHAP 2: STATE OWNERSHIP (HomePage diubah menjadi StatefulWidget)
+// ----------------------------------------------------------------------
+class HomePage extends StatefulWidget {
   final Map<String, dynamic> student;
   final List<dynamic> courses;
 
   const HomePage({super.key, required this.student, required this.courses});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // 1. STATE OWNERSHIP: Menyimpan daftar courseCode yang difavoritkan di Parent
+  Set<String> favoriteCourseCodes = {};
+
+  // 2. Callback fungsi untuk mengubah state favorit
+  void toggleFavorite(String courseCode) {
+    setState(() {
+      if (favoriteCourseCodes.contains(courseCode)) {
+        favoriteCourseCodes.remove(courseCode);
+      } else {
+        favoriteCourseCodes.add(courseCode);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     int totalSks = 0;
     int completedTopics = 0;
-    for (var course in courses) {
+    for (var course in widget.courses) {
       totalSks += (course['credits'] as int);
-      if (course['status'] == 'done') completedTopics++;
+      if (course['status'] == 'done') {
+        completedTopics++;
+      }
     }
 
     return Scaffold(
@@ -162,17 +180,38 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IdentityHeader(student: student), // Memanggil Reusable Widget
+            IdentityHeader(student: widget.student),
             const SizedBox(height: 24),
             const Text('Ringkasan Belajar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: SummaryCard(title: 'Topik Selesai', value: '$completedTopics/${courses.length}', icon: Icons.task_alt, color: Colors.green)),
-                const SizedBox(width: 12),
-                Expanded(child: SummaryCard(title: 'Total SKS', value: '$totalSks SKS', icon: Icons.menu_book, color: Colors.orange)),
+                Expanded(child: SummaryCard(title: 'Selesai', value: '$completedTopics/${widget.courses.length}', icon: Icons.task_alt, color: Colors.green)),
+                const SizedBox(width: 8),
+                Expanded(child: SummaryCard(title: 'SKS', value: '$totalSks', icon: Icons.menu_book, color: Colors.orange)),
+                const SizedBox(width: 8),
+                // 3. Menampilkan jumlah favorit berdasarkan state di Parent
+                Expanded(child: SummaryCard(title: 'Favorit', value: '${favoriteCourseCodes.length}', icon: Icons.favorite, color: Colors.red)),
               ],
             ),
+            const SizedBox(height: 24),
+            const Text('Eksperimen Tahap 2: Simulasi Prop Drilling', style: TextStyle(color: Colors.grey)),
+            // 4. PROP DRILLING: Mengoper state (isFavorite) dan callback (toggleFavorite) ke child widget
+            ...widget.courses.map((course) => ListTile(
+                  title: Text(course['title']),
+                  subtitle: Text(course['code']),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                      // Mengirim parameter data dan fungsi ke halaman detail
+                      CourseDetailPage(
+                        course: course,
+                        isFavorite: favoriteCourseCodes.contains(course['code']),
+                        onFavoriteToggle: () => toggleFavorite(course['code']),
+                      )
+                    ));
+                  },
+                )),
           ],
         ),
       ),
@@ -190,12 +229,11 @@ class CoursesPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Daftar Materi'), backgroundColor: Colors.indigo, foregroundColor: Colors.white),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Jika layar cukup lebar (Medium/Expanded), gunakan GridView
           if (constraints.maxWidth >= 600) {
             return GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: constraints.maxWidth >= 840 ? 3 : 2, // 3 kolom di layar sangat lebar, 2 kolom di medium
+                crossAxisCount: constraints.maxWidth >= 840 ? 3 : 2,
                 childAspectRatio: 2.5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
@@ -203,9 +241,7 @@ class CoursesPage extends StatelessWidget {
               itemCount: courses.length,
               itemBuilder: (context, index) => CourseItemCard(course: courses[index] as Map<String, dynamic>),
             );
-          }
-          // Jika layar Compact (HP biasa), gunakan ListView
-          else {
+          } else {
             return ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: courses.length,
@@ -260,7 +296,6 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Memvalidasi input form
                         if (_formKey.currentState!.validate()) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Feedback berhasil dikirim!'), backgroundColor: Colors.green),
@@ -281,29 +316,32 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
   }
 }
 
-class CourseDetailPage extends StatefulWidget {
+// ----------------------------------------------------------------------
+// TAHAP 2: CourseDetailPage diubah menjadi StatelessWidget
+// ----------------------------------------------------------------------
+class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
-  const CourseDetailPage({super.key, required this.course});
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
 
-  @override
-  State<CourseDetailPage> createState() => _CourseDetailPageState();
-}
+  const CourseDetailPage({
+    super.key,
+    required this.course,
+    required this.isFavorite,
+    required this.onFavoriteToggle,
+  });
 
-class _CourseDetailPageState extends State<CourseDetailPage> {
-  bool _isFavorite = false;
-
-  void _showConfirmDialog() {
+  void _showConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Daftar Materi Ini?'),
-        content: Text('Apakah Anda ingin mendaftar kelas ${widget.course['title']}?'),
+        content: Text('Apakah Anda ingin mendaftar kelas ${course['title']}?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Tutup dialog
-              // Tampilkan SnackBar sukses
+              Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Pendaftaran Berhasil!'), backgroundColor: Colors.green),
               );
@@ -319,7 +357,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.course['title']), backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+      appBar: AppBar(title: Text(course['title']), backgroundColor: Colors.indigo, foregroundColor: Colors.white),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -328,30 +366,25 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Text(widget.course['title'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
-                // Interaksi Inkwell/IconButton
-                // 2415051023 - Dewa Putu Bagus Mahadinata - Tahap 1
+                Expanded(child: Text(course['title'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
+                // Memanggil callback saat tombol ditekan
                 IconButton(
-                  icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red, size: 32),
-                  onPressed: () {
-                    setState(() {
-                      _isFavorite = !_isFavorite;
-                    });
-                  },
+                  icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red, size: 32),
+                  onPressed: onFavoriteToggle, // Fungsi ini akan mengeksekusi toggleFavorite di HomePage
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            Text('Kode: ${widget.course['code']}', style: const TextStyle(fontSize: 18)),
+            Text('Kode: ${course['code']}', style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
-            Text('SKS: ${widget.course['credits']}', style: const TextStyle(fontSize: 18)),
+            Text('SKS: ${course['credits']}', style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
-            Text('Status: ${widget.course['status']}', style: const TextStyle(fontSize: 18, color: Colors.blue)),
+            Text('Status: ${course['status']}', style: const TextStyle(fontSize: 18, color: Colors.blue)),
             const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _showConfirmDialog, // Memanggil Dialog
+                onPressed: () => _showConfirmDialog(context),
                 icon: const Icon(Icons.app_registration),
                 label: const Text('Daftar Kelas Ini'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
@@ -364,7 +397,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   }
 }
 
-// Reusable 1: Identitas Mahasiswa
+// ----------------------------------------------------------------------
+// Reusable Widgets
+// ----------------------------------------------------------------------
 class IdentityHeader extends StatelessWidget {
   final Map<String, dynamic> student;
   const IdentityHeader({super.key, required this.student});
@@ -387,7 +422,6 @@ class IdentityHeader extends StatelessWidget {
   }
 }
 
-// Reusable 2: Kartu Summary / Ringkasan
 class SummaryCard extends StatelessWidget {
   final String title;
   final String value;
@@ -415,7 +449,9 @@ class SummaryCard extends StatelessWidget {
   }
 }
 
-// Reusable 3: Item List/Grid Materi
+// ----------------------------------------------------------------------
+// TAHAP 2: Efek Prop Drilling pada CourseItemCard (Klik dimatikan sementara)
+// ----------------------------------------------------------------------
 class CourseItemCard extends StatelessWidget {
   final Map<String, dynamic> course;
   const CourseItemCard({super.key, required this.course});
@@ -426,12 +462,14 @@ class CourseItemCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: statusColor.withOpacity(0.3))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: statusColor.withAlpha(76))),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Navigasi ke Detail
-          Navigator.push(context, MaterialPageRoute(builder: (context) => CourseDetailPage(course: course)));
+          // Navigasi ini DIMATIKAN sementara untuk menunjukkan masalah Prop Drilling.
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tahap 2: Buka detail dari tab Home (simulasi Prop Drilling)')),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
