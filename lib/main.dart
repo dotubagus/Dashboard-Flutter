@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
+
 import 'course_provider.dart';
+import 'student_service.dart';
 
 void main() {
   runApp(
@@ -16,15 +15,6 @@ void main() {
 
 const String studentName = 'Dewa Putu Bagus Mahadinata';
 const String studentId = '2415051023';
-
-class StudentService {
-  static Future<Map<String, dynamic>> loadStudentData() async {
-    final jsonString = await rootBundle.loadString(
-      'assets/data/student_data.json',
-    );
-    return jsonDecode(jsonString) as Map<String, dynamic>;
-  }
-}
 
 class CourseExplorerApp extends StatelessWidget {
   const CourseExplorerApp({super.key});
@@ -107,13 +97,8 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      HomePage(
-        student: widget.student,
-        courses: widget.courses,
-      ),
-      CoursesPage(
-        courses: widget.courses,
-      ),
+      HomePage(student: widget.student, courses: widget.courses),
+      CoursesPage(courses: widget.courses),
       ProfileFeedbackPage(student: widget.student),
     ];
 
@@ -191,11 +176,7 @@ class HomePage extends StatelessWidget {
   final Map<String, dynamic> student;
   final List<dynamic> courses;
 
-  const HomePage({
-    super.key,
-    required this.student,
-    required this.courses,
-  });
+  const HomePage({super.key, required this.student, required this.courses});
 
   @override
   Widget build(BuildContext context) {
@@ -275,10 +256,7 @@ class HomePage extends StatelessWidget {
 class CoursesPage extends StatelessWidget {
   final List<dynamic> courses;
 
-  const CoursesPage({
-    super.key,
-    required this.courses,
-  });
+  const CoursesPage({super.key, required this.courses});
 
   @override
   Widget build(BuildContext context) {
@@ -302,9 +280,7 @@ class CoursesPage extends StatelessWidget {
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index] as Map<String, dynamic>;
-                return CourseItemCard(
-                  course: course,
-                );
+                return CourseItemCard(course: course);
               },
             );
           } else {
@@ -313,9 +289,7 @@ class CoursesPage extends StatelessWidget {
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index] as Map<String, dynamic>;
-                return CourseItemCard(
-                  course: course,
-                );
+                return CourseItemCard(course: course);
               },
             );
           }
@@ -331,10 +305,7 @@ class CoursesPage extends StatelessWidget {
 class CourseItemCard extends StatelessWidget {
   final Map<String, dynamic> course;
 
-  const CourseItemCard({
-    super.key,
-    required this.course,
-  });
+  const CourseItemCard({super.key, required this.course});
 
   @override
   Widget build(BuildContext context) {
@@ -486,7 +457,9 @@ class CourseDetailPage extends StatelessWidget {
                         size: 32,
                       ),
                       onPressed: () {
-                        context.read<CourseProvider>().toggleFavorite(courseCode);
+                        context.read<CourseProvider>().toggleFavorite(
+                          courseCode,
+                        );
                       },
                     );
                   },
@@ -494,11 +467,20 @@ class CourseDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Text('Kode: ${course['code']}', style: const TextStyle(fontSize: 18)),
+            Text(
+              'Kode: ${course['code']}',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 8),
-            Text('SKS: ${course['credits']}', style: const TextStyle(fontSize: 18)),
+            Text(
+              'SKS: ${course['credits']}',
+              style: const TextStyle(fontSize: 18),
+            ),
             const SizedBox(height: 8),
-            Text('Status: ${course['status']}', style: const TextStyle(fontSize: 18, color: Colors.blue)),
+            Text(
+              'Status: ${course['status']}',
+              style: const TextStyle(fontSize: 18, color: Colors.blue),
+            ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -512,7 +494,7 @@ class CourseDetailPage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -557,7 +539,11 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
             const SizedBox(height: 30),
             const Text(
               'Eksperimen Tahap 4: ValueNotifier',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
             ),
             const SizedBox(height: 16),
             ValueListenableBuilder<int>(
@@ -595,7 +581,7 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
                   padding: const EdgeInsets.all(16),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
