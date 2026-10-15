@@ -330,6 +330,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               children: [
                 Expanded(child: Text(widget.course['title'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
                 // Interaksi Inkwell/IconButton
+                // 2415051023 - Dewa Putu Bagus Mahadinata - Tahap 1
                 IconButton(
                   icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.red, size: 32),
                   onPressed: () {
