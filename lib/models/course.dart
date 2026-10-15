@@ -1,3 +1,5 @@
+// Nama: Dewa Putu Bagus Mahadinata
+// NIM: 2415051023
 // lib/models/course.dart
 
 class Course {
