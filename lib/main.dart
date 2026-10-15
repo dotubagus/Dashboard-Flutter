@@ -85,8 +85,7 @@ class _MainDataLoaderState extends State<MainDataLoader> {
 }
 
 // ----------------------------------------------------------------------
-// TAHAP 3: LIFTING STATE UP & SINGLE SOURCE OF TRUTH
-// State dipindahkan ke Ancestor tertinggi yang membawahi semua halaman
+// RESPONSIVE SHELL (Dibersihkan dari Prop Drilling State)
 // ----------------------------------------------------------------------
 class ResponsiveShell extends StatefulWidget {
   final Map<String, dynamic> student;
@@ -105,34 +104,15 @@ class ResponsiveShell extends StatefulWidget {
 class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
-  // SINGLE SOURCE OF TRUTH: Hanya ada satu state ini untuk seluruh aplikasi
-  Set<String> favoriteCourseCodes = {};
-
-  // CALLBACK: Fungsi yang akan dioper ke bawah untuk mengubah state
-  void _toggleFavorite(String code) {
-    setState(() {
-      if (favoriteCourseCodes.contains(code)) {
-        favoriteCourseCodes.remove(code);
-      } else {
-        favoriteCourseCodes.add(code);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      // Home hanya butuh menerima "jumlah" favoritnya saja
       HomePage(
         student: widget.student,
         courses: widget.courses,
-        favoriteCount: favoriteCourseCodes.length,
       ),
-      // Courses menerima seluruh data state dan fungsi callback-nya
       CoursesPage(
         courses: widget.courses,
-        favoriteCourseCodes: favoriteCourseCodes,
-        onFavoriteToggle: _toggleFavorite,
       ),
       ProfileFeedbackPage(student: widget.student),
     ];
@@ -205,18 +185,16 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
 }
 
 // ----------------------------------------------------------------------
-// HomePage dikembalikan menjadi StatelessWidget (Tidak punya state sendiri)
+// TAHAP 7: HomePage menggunakan context.watch()
 // ----------------------------------------------------------------------
 class HomePage extends StatelessWidget {
   final Map<String, dynamic> student;
   final List<dynamic> courses;
-  final int favoriteCount; // Menerima data dari Parent
 
   const HomePage({
     super.key,
     required this.student,
     required this.courses,
-    required this.favoriteCount,
   });
 
   @override
@@ -227,6 +205,9 @@ class HomePage extends StatelessWidget {
       totalSks += (course['credits'] as int);
       if (course['status'] == 'done') completedTopics++;
     }
+
+    // TAHAP 7: Menggunakan context.watch() untuk membaca dan mendengarkan jumlah favorit
+    final favoriteCount = context.watch<CourseProvider>().favorites.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -266,7 +247,6 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Menampilkan jumlah berdasarkan properti yang dikirim Parent
                 Expanded(
                   child: SummaryCard(
                     title: 'Favorit',
@@ -279,7 +259,7 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Cek Tab "Courses" untuk mencoba fungsi Favorite',
+              'Cek Tab "Courses" untuk mencoba fungsi Favorite (State dikelola Provider)',
               style: TextStyle(color: Colors.grey),
             ),
           ],
@@ -290,18 +270,14 @@ class HomePage extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------
-// CoursesPage menerima state dan meneruskannya ke tiap CourseItemCard
+// CoursesPage (Dibersihkan dari parameter callback)
 // ----------------------------------------------------------------------
 class CoursesPage extends StatelessWidget {
   final List<dynamic> courses;
-  final Set<String> favoriteCourseCodes; // Data dari parent
-  final void Function(String) onFavoriteToggle; // Fungsi dari parent
 
   const CoursesPage({
     super.key,
     required this.courses,
-    required this.favoriteCourseCodes,
-    required this.onFavoriteToggle,
   });
 
   @override
@@ -328,8 +304,6 @@ class CoursesPage extends StatelessWidget {
                 final course = courses[index] as Map<String, dynamic>;
                 return CourseItemCard(
                   course: course,
-                  isFavorite: favoriteCourseCodes.contains(course['code']),
-                  onFavoriteToggle: () => onFavoriteToggle(course['code']),
                 );
               },
             );
@@ -341,9 +315,6 @@ class CoursesPage extends StatelessWidget {
                 final course = courses[index] as Map<String, dynamic>;
                 return CourseItemCard(
                   course: course,
-                  // Mengoper ke child terdalam
-                  isFavorite: favoriteCourseCodes.contains(course['code']),
-                  onFavoriteToggle: () => onFavoriteToggle(course['code']),
                 );
               },
             );
@@ -355,18 +326,14 @@ class CoursesPage extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------
-// CourseItemCard menampilkan ikon dan men-trigger fungsi Parent
+// TAHAP 7: CourseItemCard menggunakan Consumer & context.read()
 // ----------------------------------------------------------------------
 class CourseItemCard extends StatelessWidget {
   final Map<String, dynamic> course;
-  final bool isFavorite;
-  final VoidCallback onFavoriteToggle;
 
   const CourseItemCard({
     super.key,
     required this.course,
-    required this.isFavorite,
-    required this.onFavoriteToggle,
   });
 
   @override
@@ -374,6 +341,7 @@ class CourseItemCard extends StatelessWidget {
     Color statusColor = (course['status'] == 'done')
         ? Colors.green
         : Colors.orange;
+    final courseCode = course['code'] as String;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -384,7 +352,6 @@ class CourseItemCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Navigasi ke detail
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -412,19 +379,27 @@ class CourseItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${course['code']} • ${course['credits']} SKS',
+                      '$courseCode • ${course['credits']} SKS',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              // Tombol aksi dikembalikan ke Parent via Callback
-              IconButton(
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.red,
-                ),
-                onPressed: onFavoriteToggle,
+              // TAHAP 7: Consumer membatasi rebuild hanya pada tombol ini saja
+              Consumer<CourseProvider>(
+                builder: (context, provider, child) {
+                  final isFav = provider.isFavorite(courseCode);
+                  return IconButton(
+                    icon: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.red,
+                    ),
+                    onPressed: () {
+                      // TAHAP 7: context.read() digunakan untuk memanggil aksi di onPressed
+                      context.read<CourseProvider>().toggleFavorite(courseCode);
+                    },
+                  );
+                },
               ),
             ],
           ),
@@ -434,20 +409,113 @@ class CourseItemCard extends StatelessWidget {
   }
 }
 
-// Halaman Detail Disederhanakan kembali (Fokus utama pada Tab Courses)
+// ----------------------------------------------------------------------
+// CourseDetailPage (Lengkap dengan Dialog)
+// ----------------------------------------------------------------------
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
   const CourseDetailPage({super.key, required this.course});
 
+  void _showConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Daftar Materi Ini?'),
+        content: Text('Apakah Anda ingin mendaftar kelas ${course['title']}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Pendaftaran Berhasil!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Daftar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final courseCode = course['code'] as String;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(course['title']),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
-      body: Center(child: Text('Detail Materi: ${course['title']}')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    course['title'],
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // Juga mendengarkan Provider di halaman detail
+                Consumer<CourseProvider>(
+                  builder: (context, provider, child) {
+                    final isFav = provider.isFavorite(courseCode);
+                    return IconButton(
+                      icon: Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                        color: Colors.red,
+                        size: 32,
+                      ),
+                      onPressed: () {
+                        context.read<CourseProvider>().toggleFavorite(courseCode);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text('Kode: ${course['code']}', style: const TextStyle(fontSize: 18)),
+            const SizedBox(height: 8),
+            Text('SKS: ${course['credits']}', style: const TextStyle(fontSize: 18)),
+            const SizedBox(height: 8),
+            Text('Status: ${course['status']}', style: const TextStyle(fontSize: 18, color: Colors.blue)),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showConfirmDialog(context),
+                icon: const Icon(Icons.app_registration),
+                label: const Text('Daftar Kelas Ini'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 }
@@ -464,12 +532,10 @@ class ProfileFeedbackPage extends StatefulWidget {
 }
 
 class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
-  // 1. Buat ValueNotifier untuk satu nilai sederhana (Target Jam Belajar)
   final ValueNotifier<int> _targetBelajar = ValueNotifier<int>(0);
 
   @override
   void dispose() {
-    // ValueNotifier wajib di-dispose untuk mencegah kebocoran memori (memory leak)
     _targetBelajar.dispose();
     super.dispose();
   }
@@ -477,7 +543,11 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil & Target'), backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+      appBar: AppBar(
+        title: const Text('Profil & Target'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -485,11 +555,11 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
           children: [
             IdentityHeader(student: widget.student),
             const SizedBox(height: 30),
-            const Text('Eksperimen Tahap 4: ValueNotifier', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
+            const Text(
+              'Eksperimen Tahap 4: ValueNotifier',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+            ),
             const SizedBox(height: 16),
-            
-            // 2. Tampilkan nilai menggunakan ValueListenableBuilder
-            // Hanya bagian di dalam builder ini yang akan di-rebuild saat _targetBelajar berubah!
             ValueListenableBuilder<int>(
               valueListenable: _targetBelajar,
               builder: (context, value, child) {
@@ -500,27 +570,30 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
                     padding: const EdgeInsets.all(20.0),
                     child: Text(
                       'Target Belajar Mingguan: $value Jam',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo,
+                      ),
                     ),
                   ),
                 );
               },
             ),
-            
             const SizedBox(height: 24),
-            
-            // 3. Button untuk mengubah value
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // MENGUBAH VALUE TANPA SETSTATE()
-                  // Saat value ditambahkan, ValueListenableBuilder otomatis bereaksi
-                  _targetBelajar.value += 1; 
+                  _targetBelajar.value += 1;
                 },
                 icon: const Icon(Icons.add_alarm),
                 label: const Text('Tambah 1 Jam Target'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                ),
               ),
             )
           ],
@@ -530,9 +603,13 @@ class _ProfileFeedbackPageState extends State<ProfileFeedbackPage> {
   }
 }
 
+// ----------------------------------------------------------------------
+// Reusable Widgets
+// ----------------------------------------------------------------------
 class IdentityHeader extends StatelessWidget {
   final Map<String, dynamic> student;
   const IdentityHeader({super.key, required this.student});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -553,6 +630,7 @@ class IdentityHeader extends StatelessWidget {
               color: Colors.indigo,
             ),
           ),
+          const SizedBox(height: 4),
           Text('NIM: ${student['nim']}', style: const TextStyle(fontSize: 16)),
         ],
       ),
@@ -565,6 +643,7 @@ class SummaryCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+
   const SummaryCard({
     super.key,
     required this.title,
@@ -572,6 +651,7 @@ class SummaryCard extends StatelessWidget {
     required this.icon,
     required this.color,
   });
+
   @override
   Widget build(BuildContext context) {
     return Card(
