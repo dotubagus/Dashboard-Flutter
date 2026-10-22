@@ -45,7 +45,7 @@ class CourseProvider extends ChangeNotifier {
     try {
       _courses = await repository.getCourses();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/error_view.dart';
 import '../constants.dart';
 import '../providers/course_provider.dart';
 import 'responsive_shell.dart';
@@ -15,7 +16,6 @@ class CourseRoot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final provider = context.watch<CourseProvider>();
 
     // State: Loading
@@ -34,31 +34,35 @@ class CourseRoot extends StatelessWidget {
       );
     }
 
-    // State: Error
+    // State: Error (pakai ErrorView + retry)
     if (provider.errorMessage != null) {
       return Scaffold(
+        appBar: AppBar(title: const Text('$studentName - $studentId')),
+        body: ErrorView(
+          message: provider.errorMessage!,
+          onRetry: provider.loadCourses,
+        ),
+      );
+    }
+
+    // State: Empty
+    if (provider.courses.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('$studentName - $studentId')),
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 12),
-                const Text(
-                  'Gagal memuat data',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(provider.errorMessage!, textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => context.read<CourseProvider>().loadCourses(),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Coba Lagi'),
-                ),
-              ],
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.inbox_outlined, size: 48, color: Colors.grey),
+              const SizedBox(height: 12),
+              const Text('Data course belum tersedia'),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: provider.loadCourses,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Muat ulang'),
+              ),
+            ],
           ),
         ),
       );
