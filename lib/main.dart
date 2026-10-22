@@ -8,13 +8,14 @@ import 'package:provider/provider.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/course_root.dart';
-import 'services/student_service.dart';
+import 'services/course_api_service.dart';
 
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) =>
-          CourseProvider(CourseRepository(StudentService()))..loadCourses(),
+      create: (context) => CourseProvider(
+        CourseRepository(CourseApiService('https://jsonplaceholder.typicode.com')),
+      )..loadCourses(),
       child: const CourseExplorerApp(),
     ),
   );

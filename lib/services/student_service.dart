@@ -15,12 +15,4 @@ class StudentService {
     return jsonDecode(jsonString) as Map<String, dynamic>;
   }
 
-  Future<List<Course>> loadCourses() async {
-    
-    final data = await loadStudentData();
-    final courseListJson = data['courses'] as List<dynamic>;
-    return courseListJson
-        .map((json) => Course.fromJson(json as Map<String, dynamic>))
-        .toList();
-  }
 }

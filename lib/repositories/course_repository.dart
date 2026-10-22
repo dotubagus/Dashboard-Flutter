@@ -3,17 +3,11 @@
 // lib/repositories/course_repository.dart
 
 import '../models/course.dart';
-import '../services/student_service.dart';
+import '../services/course_api_service.dart';
 
 class CourseRepository {
-  final StudentService service;
-
-  // Service diterima lewat constructor (dependency injection)
   CourseRepository(this.service);
+  final CourseApiService service;
 
-  // API sederhana untuk Provider. Provider tidak perlu tahu
-  // data berasal dari JSON, REST API, atau database.
-  Future<List<Course>> getCourses() {
-    return service.loadCourses();
-  }
+  Future<List<Course>> getCourses() => service.getCourses();
 }

@@ -18,13 +18,6 @@ class CourseRoot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    //Dewa Putu Bagus Mahadinata - 2415051023
-    fetchCoursesLatihan().then((data) {
-      debugPrint('TAHAP 2 SUKSES: Berhasil mengambil ${data.length} item dari internet!');
-    }).catchError((error) {
-      debugPrint('TAHAP 2 GAGAL: $error');
-    });
-
     final provider = context.watch<CourseProvider>();
 
     // State: Loading
@@ -79,14 +72,4 @@ class CourseRoot extends StatelessWidget {
       courses: provider.courses,
     );
   }
-}
-
-const String apiUrl = 'https://jsonplaceholder.typicode.com/posts';
-
-Future<List<dynamic>> fetchCoursesLatihan() async {
-  final response = await http.get(Uri.parse(apiUrl));
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body) as List<dynamic>;
-  }
-  throw Exception('HTTP Error: ${response.statusCode}');
 }
