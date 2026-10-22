@@ -6,3 +6,5 @@
 // tanpa harus meng-import main.dart (menghindari circular import).
 const String studentName = 'Dewa Putu Bagus Mahadinata';
 const String studentId = '2415051023';
+
+const String apiBaseUrl = 'https://raw.githubusercontent.com/dotubagus/Dashboard-Flutter/main';

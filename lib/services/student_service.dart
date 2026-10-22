@@ -5,7 +5,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
-import '../models/course.dart';
 
 class StudentService {
   // Detail teknis membaca asset JSON hanya ada di layer ini.

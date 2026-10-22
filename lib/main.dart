@@ -2,6 +2,8 @@
 // NIM: 2415051023
 // lib/main.dart
 
+import 'constants.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,7 +16,7 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => CourseProvider(
-        CourseRepository(CourseApiService('https://jsonplaceholder.typicode.com')),
+        CourseRepository(CourseApiService(apiBaseUrl)),
       )..loadCourses(),
       child: const CourseExplorerApp(),
     ),
