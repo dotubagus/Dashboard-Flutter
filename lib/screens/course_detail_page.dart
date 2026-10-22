@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'course_form_page.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 
@@ -47,12 +48,30 @@ class CourseDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String courseCode = course.code;
+    
+    // PERBAIKAN: Ubah nama variabel menjadi currentCourse agar tidak bentrok dengan this.course
+    final currentCourse = context.watch<CourseProvider>().courses.firstWhere(
+      (c) => c.code == courseCode,
+      orElse: () => course,
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(course.title),
+        title: Text(currentCourse.title),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            tooltip: 'Edit',
+            icon: const Icon(Icons.edit),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CourseFormPage(course: currentCourse),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -64,14 +83,13 @@ class CourseDetailPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    course.title,
+                    currentCourse.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                // Juga mendengarkan Provider di halaman detail
                 Consumer<CourseProvider>(
                   builder: (context, provider, child) {
                     final isFav = provider.isFavorite(courseCode);
@@ -92,12 +110,12 @@ class CourseDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Text('Kode: ${course.code}', style: const TextStyle(fontSize: 18)),
+            Text('Kode: ${currentCourse.code}', style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
-            Text('SKS: ${course.credits}',
+            Text('SKS: ${currentCourse.credits}',
                 style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 8),
-            Text('Status: ${course.status}',
+            Text('Status: ${currentCourse.status}',
                 style: const TextStyle(fontSize: 18, color: Colors.blue)),
             const Spacer(),
             SizedBox(

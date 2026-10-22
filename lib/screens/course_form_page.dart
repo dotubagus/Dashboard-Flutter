@@ -10,7 +10,9 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 
 class CourseFormPage extends StatefulWidget {
-  const CourseFormPage({super.key});
+  const CourseFormPage({super.key, this.course});
+
+  final Course? course; // null = tambah, terisi = edit
 
   @override
   State<CourseFormPage> createState() => _CourseFormPageState();
@@ -23,6 +25,20 @@ class _CourseFormPageState extends State<CourseFormPage> {
   final _creditsCtrl = TextEditingController();
   String _status = 'planned';
 
+  bool get _isEdit => widget.course != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.course;
+    if (c != null) {
+      _codeCtrl.text = c.code;
+      _titleCtrl.text = c.title;
+      _creditsCtrl.text = c.credits.toString();
+      _status = c.status;
+    }
+  }
+
   @override
   void dispose() {
     _codeCtrl.dispose();
@@ -34,24 +50,29 @@ class _CourseFormPageState extends State<CourseFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-// Dewa Putu Bagus Mahadinata
-// NIM: 2415051023
     final provider = context.read<CourseProvider>();
-    final ok = await provider.createCourse(
-      Course(
-        code: _codeCtrl.text.trim(),
-        title: _titleCtrl.text.trim(),
-        credits: int.parse(_creditsCtrl.text.trim()),
-        status: _status,
-      ),
+
+    final data = Course(
+      code: _codeCtrl.text.trim(),
+      title: _titleCtrl.text.trim(),
+      credits: int.parse(_creditsCtrl.text.trim()),
+      status: _status,
     );
+
+    final ok = _isEdit
+        ? await provider.updateCourse(widget.course!.id!, data)
+        : await provider.createCourse(data);
 
     if (!context.mounted) return; // wajib setelah await
 
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course berhasil ditambahkan'),
+        SnackBar(
+          content: Text(
+            _isEdit
+                ? 'Course berhasil diperbarui'
+                : 'Course berhasil ditambahkan',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -72,7 +93,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tambah Course'),
+        title: Text(_isEdit ? 'Edit Course' : 'Tambah Course'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
@@ -90,18 +111,23 @@ class _CourseFormPageState extends State<CourseFormPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _codeCtrl,
-                decoration: const InputDecoration(
+                readOnly: _isEdit, // kode = kunci favorites, tidak boleh diubah
+                decoration: InputDecoration(
                   labelText: 'Kode (mis. MOB05)',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  filled: _isEdit,
                 ),
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return 'Kode wajib diisi';
-                  final exists = context
-                      .read<CourseProvider>()
-                      .courses
-                      .any((c) => c.code == value);
-                  if (exists) return 'Kode sudah dipakai';
+                  // Cek kode ganda hanya saat tambah data baru
+                  if (!_isEdit) {
+                    final exists = context
+                        .read<CourseProvider>()
+                        .courses
+                        .any((c) => c.code == value);
+                    if (exists) return 'Kode sudah dipakai';
+                  }
                   return null;
                 },
               ),
@@ -126,7 +152,9 @@ class _CourseFormPageState extends State<CourseFormPage> {
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return 'SKS wajib diisi';
-                  if (int.tryParse(value) == null) return 'SKS harus berupa angka';
+                  if (int.tryParse(value) == null) {
+                    return 'SKS harus berupa angka';
+                  }
                   return null;
                 },
               ),

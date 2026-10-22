@@ -79,4 +79,23 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
  }
+
+ Future<bool> updateCourse(int id, Course course) async {
+  if (_isSaving) return false; // cegah submit ganda
+  _isSaving = true;
+  _saveError = null;
+  notifyListeners();
+
+  try {
+    await repository.updateCourse(id, course);
+    await loadCourses(showLoading: false);
+    return true;
+  } catch (e) {
+    _saveError = e.toString().replaceFirst('Exception: ', '');
+    return false;
+  } finally {
+    _isSaving = false;
+    notifyListeners();
+  }
+}
 }
