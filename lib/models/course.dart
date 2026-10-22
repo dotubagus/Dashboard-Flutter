@@ -20,7 +20,7 @@ class Course {
   // Factory untuk mengubah data JSON (Map) menjadi Objek Course
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
-      id: json['id'] as int?,
+      id: int.tryParse('${json['id']}'),
       code: json['code'] as String,
       title: json['title'] as String,
       credits: json['credits'] as int,

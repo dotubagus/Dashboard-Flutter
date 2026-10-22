@@ -7,4 +7,4 @@
 const String studentName = 'Dewa Putu Bagus Mahadinata';
 const String studentId = '2415051023';
 
-const String apiBaseUrl = 'https://raw.githubusercontent.com/dotubagus/Dashboard-Flutter/main';
+const String apiBaseUrl = 'https://6ada1ffe7512f497b3ffa19d.mockapi.io/';

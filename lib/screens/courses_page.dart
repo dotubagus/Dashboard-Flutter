@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../models/course.dart';
 import '../widgets/course_item_card.dart';
+import 'course_form_page.dart';
 
 class CoursesPage extends StatelessWidget {
   final List<Course> courses;
@@ -18,6 +19,13 @@ class CoursesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CourseFormPage()),
+        ),
+      child: const Icon(Icons.add),
+      ),
       appBar: AppBar(
         title: const Text('Daftar Materi'),
         backgroundColor: Colors.indigo,

@@ -16,11 +16,18 @@ class CourseProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  bool _isSaving = false;
+  String? _saveError;
+
   final Set<String> _favorites = {};
 
   List<Course> get courses => _courses;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  bool get isSaving => _isSaving;
+  String? get saveError => _saveError;
+
   Set<String> get favorites => _favorites;
 
   List<Course> get favoriteCourses =>
@@ -37,18 +44,39 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadCourses() async {
+  Future<void> loadCourses({bool showLoading = true}) async {
+  if (showLoading) {
     _isLoading = true;
-    _errorMessage = null;
     notifyListeners();
-
-    try {
-      _courses = await repository.getCourses();
-    } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
+  _errorMessage = null;
+
+  try {
+    _courses = await repository.getCourses(); // ganti isi list, bukan tambah
+  } catch (e) {
+    _errorMessage = e.toString().replaceFirst('Exception: ', '');
+  } finally {
+    _isLoading = false;
+    notifyListeners();
+  }
+  }
+
+  Future<bool> createCourse(Course course) async {
+  if (_isSaving) return false; // cegah submit ganda
+  _isSaving = true;
+  _saveError = null;
+  notifyListeners();
+
+  try {
+    await repository.createCourse(course);
+    await loadCourses(showLoading: false);
+    return true;
+  } catch (e) {
+    _saveError = e.toString().replaceFirst('Exception: ', '');
+    return false;
+  } finally {
+    _isSaving = false;
+    notifyListeners();
+  }
+ }
 }
