@@ -20,3 +20,17 @@ Layer di bawah tidak boleh meng-import layer di atasnya.
 | `providers/` | State management (`CourseProvider`, `ChangeNotifier`). Menyimpan state courses, loading, error, dan favorites, serta memanggil `notifyListeners()`. Tidak menyimpan `BuildContext`. |
 | `screens/` | Halaman penuh (Root, ResponsiveShell, Home, Courses, Favorites, Detail, Profile). Membaca state dengan `context.watch()` dan memicu aksi dengan `context.read()`. |
 | `widgets/` | Komponen UI kecil yang dipakai ulang (`CourseItemCard`, `SummaryCard`, `IdentityHeader`). |
+
+Nama: Dewa Putu Bagus Mahadinata
+NIM: 2415051023
+## Dokumentasi REST API (Praktikum 7)
+- **Endpoint URL**: `https://jsonplaceholder.typicode.com/posts`
+- **HTTP Method**: GET, POST, PUT/PATCH, DELETE
+- **Status Code**: 200 OK, 201 Created
+- **Resource/Data**: JSON Course
+- **Field JSON yang digunakan**:
+  1. `id` (Integer)
+  2. `code` (String)
+  3. `title` (String)
+  4. `credits` (Integer)
+  5. `status` (String)
