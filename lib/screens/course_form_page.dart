@@ -63,7 +63,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
         ? await provider.updateCourse(widget.course!.id!, data)
         : await provider.createCourse(data);
 
-    if (!context.mounted) return; // wajib setelah await
+    if (!mounted) return; // wajib setelah await
 
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -160,7 +160,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _status,
+                initialValue: _status,
                 decoration: const InputDecoration(
                   labelText: 'Status',
                   border: OutlineInputBorder(),
