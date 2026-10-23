@@ -18,7 +18,6 @@ class CourseSupabaseService implements CourseDataSource {
         .toList();
   }
 
-  // Sementara, agar kelas tetap dapat dikompilasi (dikerjakan Tahap 13-15):
   @override
   Future<Course> createCourse(Course course) => throw UnimplementedError();
 
