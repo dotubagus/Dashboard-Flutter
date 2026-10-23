@@ -98,4 +98,30 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+// Dewa Putu Bagus Mahadinata
+// NIM: 2415051023
+Future<bool> deleteCourse(Course course) async {
+  if (_isSaving) return false;
+  if (course.id == null) {
+    _saveError = 'ID course tidak ditemukan';
+    return false;
+  }
+  _isSaving = true;
+  _saveError = null;
+  notifyListeners();
+
+  try {
+    await repository.deleteCourse(course.id!);
+    _favorites.remove(course.code);
+    await loadCourses(showLoading: false);
+    return true;
+  } catch (e) {
+    _saveError = e.toString().replaceFirst('Exception: ', '');
+    return false;
+  } finally {
+    _isSaving = false;
+    notifyListeners();
+  }
+}
 }

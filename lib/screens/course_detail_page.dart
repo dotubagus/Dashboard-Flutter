@@ -45,6 +45,56 @@ class CourseDetailPage extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmDelete(BuildContext context, Course target) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Hapus Course?'),
+      content: Text('Course "${target.title}" akan dihapus permanen.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true) return;
+  if (!context.mounted) return;
+
+  final provider = context.read<CourseProvider>();
+  final messenger = ScaffoldMessenger.of(context);
+  final navigator = Navigator.of(context);
+
+  final ok = await provider.deleteCourse(target);
+
+  if (ok) {
+    navigator.pop(); // kembali ke list (course sudah tidak ada)
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Course berhasil dihapus'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } else {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(provider.saveError ?? 'Gagal menghapus course'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String courseCode = course.code;
@@ -70,6 +120,11 @@ class CourseDetailPage extends StatelessWidget {
                 builder: (_) => CourseFormPage(course: currentCourse),
               ),
             ),
+          ),
+          IconButton(
+            tooltip: 'Hapus',
+            icon: const Icon(Icons.delete),
+            onPressed: () => _confirmDelete(context, currentCourse),
           ),
         ],
       ),

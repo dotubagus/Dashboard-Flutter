@@ -49,4 +49,15 @@ Future<void> updateCourse(int id, Course course) async {
     throw Exception('Gagal memperbarui course (HTTP ${response.statusCode})');
   }
 }
+
+// Dewa Putu Bagus Mahadinata
+// NIM: 2415051023
+Future<void> deleteCourse(int id) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/courses/$id'),
+  );
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw Exception('Gagal menghapus course (HTTP ${response.statusCode})');
+  }
+}
 }

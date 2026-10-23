@@ -9,6 +9,7 @@ import '../widgets/error_view.dart';
 import '../constants.dart';
 import '../providers/course_provider.dart';
 import 'responsive_shell.dart';
+import 'course_form_page.dart';
 
 // UI hanya membaca state dari Provider (loading/error/data)
 class CourseRoot extends StatelessWidget {
@@ -48,7 +49,6 @@ class CourseRoot extends StatelessWidget {
     // State: Empty
     if (provider.courses.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('$studentName - $studentId')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -65,6 +65,13 @@ class CourseRoot extends StatelessWidget {
             ],
           ),
         ),
+        floatingActionButton: FloatingActionButton(
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const CourseFormPage()),
+  ),
+  child: const Icon(Icons.add),
+),
       );
     }
 
