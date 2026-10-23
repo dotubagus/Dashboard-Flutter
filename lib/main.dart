@@ -12,6 +12,7 @@ import 'screens/course_root.dart';
 import 'services/course_api_service.dart';
 import 'services/course_data_source.dart';
 import 'supabase_config.dart';
+import 'services/course_supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +22,7 @@ Future<void> main() async {
     publishableKey: supabaseAnonKey,
   );
 
-  final CourseDataSource dataSource = CourseApiService(apiBaseUrl);
+  final CourseDataSource dataSource = CourseSupabaseService();
   final repository = CourseRepository(dataSource);
 
   runApp(
