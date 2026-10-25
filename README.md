@@ -24,9 +24,9 @@ Layer di bawah tidak boleh meng-import layer di atasnya.
 Nama: Dewa Putu Bagus Mahadinata
 NIM: 2415051023
 ## Dokumentasi REST API (Praktikum 7)
-- **Endpoint URL**: `https://jsonplaceholder.typicode.com/posts`
+- **Endpoint URL**: `https://course-api-pearl.vercel.app/courses`
 - **HTTP Method**: GET, POST, PUT/PATCH, DELETE
-- **Status Code**: 200 OK, 201 Created
+- **Status Code**: 200 OK
 - **Resource/Data**: JSON Course
 - **Field JSON yang digunakan**:
   1. `id` (Integer)
