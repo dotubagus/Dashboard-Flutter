@@ -34,13 +34,19 @@ class CourseSupabaseService implements CourseDataSource {
   // NIM: 2415051023
   @override
   Future<void> updateCourse(int id, Course course) async {
-    await supabase.from('courses').update(course.toJson()).eq('id', id);
+    await supabase
+        .from('courses')
+        .update(course.toJson())
+        .eq('id', id);
   }
 
   // Dewa Putu Bagus Mahadinata
   // NIM: 2415051023
   @override
   Future<void> deleteCourse(int id) async {
-    await supabase.from('courses').delete().eq('id', id);
+    await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
   }
 }

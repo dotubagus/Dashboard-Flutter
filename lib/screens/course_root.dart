@@ -21,8 +21,9 @@ class CourseRoot extends StatelessWidget {
 
     // State: Loading
     if (provider.isLoading) {
-      return const Scaffold(
-        body: Center(
+      return Scaffold(
+        appBar: AppBar(title: const Text('$studentName - $studentId')),
+        body: const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -49,6 +50,7 @@ class CourseRoot extends StatelessWidget {
     // State: Empty
     if (provider.courses.isEmpty) {
       return Scaffold(
+        appBar: AppBar(title: const Text('$studentName - $studentId')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
