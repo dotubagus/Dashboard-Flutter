@@ -30,23 +30,27 @@ class CourseSupabaseService implements CourseDataSource {
     return Course.fromJson(row);
   }
 
-  // Dewa Putu Bagus Mahadinata
-  // NIM: 2415051023
-  @override
-  Future<void> updateCourse(int id, Course course) async {
-    await supabase
-        .from('courses')
-        .update(course.toJson())
-        .eq('id', id);
+@override
+Future<void> updateCourse(int id, Course course) async {
+  final rows = await supabase
+      .from('courses')
+      .update(course.toJson())
+      .eq('id', id)
+      .select();
+  if (rows.isEmpty) {
+    throw Exception('Data tidak berubah. Cek policy UPDATE atau id.');
   }
+}
 
-  // Dewa Putu Bagus Mahadinata
-  // NIM: 2415051023
-  @override
-  Future<void> deleteCourse(int id) async {
-    await supabase
-        .from('courses')
-        .delete()
-        .eq('id', id);
+@override
+Future<void> deleteCourse(int id) async {
+  final rows = await supabase
+      .from('courses')
+      .delete()
+      .eq('id', id)
+      .select();
+  if (rows.isEmpty) {
+    throw Exception('Data tidak terhapus. Cek policy DELETE atau id.');
   }
+}
 }
