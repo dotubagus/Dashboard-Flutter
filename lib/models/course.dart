@@ -9,24 +9,26 @@ class Course {
   final int credits;
   final String status;
 
-  Course({
+  const Course({
     this.id,
     required this.code,
     required this.title,
     required this.credits,
-    required this.status,
+    this.status = 'planned',
   });
 
-  // Factory untuk mengubah data JSON (Map) menjadi Objek Course
+  // Mengubah JSON (Map) dari API menjadi objek Course
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
       id: int.tryParse('${json['id']}'),
       code: json['code'] as String,
       title: json['title'] as String,
       credits: json['credits'] as int,
-      status: json['status'] as String,
+      status: (json['status'] as String?) ?? 'planned',
     );
   }
+
+  // id tidak dikirim: dibuat oleh server/database
   Map<String, dynamic> toJson() => {
     'code': code,
     'title': title,

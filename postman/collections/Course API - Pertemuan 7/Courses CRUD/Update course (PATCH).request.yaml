@@ -1,0 +1,23 @@
+$kind: http-request
+description: "Tahap 7: PATCH mengubah sebagian field."
+url: "{{baseUrl}}/courses/{{courseId}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "done"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Hanya status yang berubah", () => {
+        const c = pm.response.json();
+        pm.expect(c.status).to.eql("done");
+        pm.expect(c.title).to.eql("Testing REST API (updated)");
+      });
+    language: text/javascript
+order: 6000

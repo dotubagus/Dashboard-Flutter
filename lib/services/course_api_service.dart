@@ -5,25 +5,28 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 import '../models/course.dart';
 import 'course_data_source.dart';
 
-class CourseApiService implements CourseDataSource {   // tambahkan implements
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
   final String baseUrl;
 
   @override
-  Future<List<Course>> getCourses() async {
-    final response = await http.get(Uri.parse('$baseUrl/courses'));
-    if (response.statusCode != 200) {
-      throw Exception('Gagal mengambil course (HTTP ${response.statusCode})');
-    }
-    final List data = jsonDecode(response.body) as List;
-    return data
-        .map((e) => Course.fromJson(e as Map<String, dynamic>))
-        .toList();
+Future<List<Course>> getCourses() async {
+  final response = await http.get(Uri.parse('$baseUrl/courses'));
+  if (response.statusCode != 200) {
+    throw Exception('Gagal mengambil course (HTTP ${response.statusCode})');
   }
+  final List data = jsonDecode(response.body) as List;
+  final courses = data
+      .map((e) => Course.fromJson(e as Map<String, dynamic>))
+      .toList();
+  debugPrint('GET /courses OK: ${courses.length} item');
+  return courses;
+}
 
   @override
   Future<Course> createCourse(Course course) async {

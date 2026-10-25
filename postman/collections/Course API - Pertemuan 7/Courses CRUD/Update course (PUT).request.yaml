@@ -1,0 +1,34 @@
+$kind: http-request
+description: "Tahap 7: PUT mengganti seluruh resource; code, title, credits wajib."
+url: "{{baseUrl}}/courses/{{courseId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "code": "{{courseCode}}",
+      "title": "Testing REST API (updated)",
+      "credits": 3,
+      "status": "active"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Bentuk Course sesuai model Dart", () => {
+        const c = pm.response.json();
+        pm.expect(c).to.include.keys("id", "code", "title", "credits", "status");
+        pm.expect(c.id).to.be.a("number");
+        pm.expect(c.credits).to.be.a("number");
+        pm.expect(["planned", "active", "done"]).to.include(c.status);
+      });
+      pm.test("Data terganti", () => {
+        const c = pm.response.json();
+        pm.expect(c.title).to.eql("Testing REST API (updated)");
+        pm.expect(c.credits).to.eql(3);
+        pm.expect(c.status).to.eql("active");
+      });
+    language: text/javascript
+order: 5000

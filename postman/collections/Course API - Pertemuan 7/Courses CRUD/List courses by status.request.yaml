@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/courses?status=active"
+method: GET
+queryParams:
+  status: active
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Semua status = active", () => {
+        pm.response.json().forEach(c => pm.expect(c.status).to.eql("active"));
+      });
+    language: text/javascript
+order: 2000

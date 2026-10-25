@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/courses/{{courseId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Bentuk Course sesuai model Dart", () => {
+        const c = pm.response.json();
+        pm.expect(c).to.include.keys("id", "code", "title", "credits", "status");
+        pm.expect(c.id).to.be.a("number");
+        pm.expect(c.credits).to.be.a("number");
+        pm.expect(["planned", "active", "done"]).to.include(c.status);
+      });
+      pm.test("id cocok", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get("courseId"))));
+    language: text/javascript
+order: 4000

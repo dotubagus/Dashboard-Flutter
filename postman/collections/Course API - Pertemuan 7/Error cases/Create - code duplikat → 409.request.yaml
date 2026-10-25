@@ -1,0 +1,25 @@
+$kind: http-request
+description: Tahap 17 Kasus E. MOB01 adalah data awal.
+url: "{{baseUrl}}/courses"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "code": "MOB01",
+      "title": "Duplikat",
+      "credits": 2
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 409", () => pm.response.to.have.status(409));
+      pm.test("Body error JSON", () => {
+        const b = pm.response.json();
+        pm.expect(b.error).to.be.a("string");
+        pm.expect(b.status).to.eql(409);
+      });
+    language: text/javascript
+order: 4000

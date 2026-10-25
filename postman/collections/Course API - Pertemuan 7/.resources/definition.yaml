@@ -1,0 +1,12 @@
+$kind: collection
+description: |-
+  REST API latihan Course Data Manager (Flutter).
+
+  Base URL untuk Flutter (`apiBaseUrl`): `https://course-api-pearl.vercel.app` (tanpa `/courses`).
+
+  Jalankan folder **Courses CRUD** berurutan: Create menyimpan `courseId` yang dipakai request berikutnya.
+variables:
+  baseUrl: https://course-api-pearl.vercel.app
+  courseId: ""
+  courseCode: ""
+  adminToken: ""

@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'constants.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/course_root.dart';
-import 'services/course_api_service.dart';
 import 'services/course_data_source.dart';
 import 'supabase_config.dart';
 import 'services/course_supabase_service.dart';
@@ -23,6 +21,7 @@ Future<void> main() async {
   );
 
   final CourseDataSource dataSource = CourseSupabaseService();
+
   final repository = CourseRepository(dataSource);
 
   runApp(

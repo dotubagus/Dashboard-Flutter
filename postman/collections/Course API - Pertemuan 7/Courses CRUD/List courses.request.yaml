@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Tahap 1–2: GET semua course, urut berdasarkan id."
+url: "{{baseUrl}}/courses"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Response berupa array Course", () => {
+        const list = pm.response.json();
+        pm.expect(list).to.be.an("array");
+        list.forEach(c => pm.expect(c).to.include.keys("id", "code", "title", "credits", "status"));
+      });
+    language: text/javascript
+order: 1000

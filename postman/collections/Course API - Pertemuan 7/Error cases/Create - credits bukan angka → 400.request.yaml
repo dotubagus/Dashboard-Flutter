@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/courses"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "code": "BAD01",
+      "title": "X",
+      "credits": "dua"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 400", () => pm.response.to.have.status(400));
+      pm.test("Body error JSON", () => {
+        const b = pm.response.json();
+        pm.expect(b.error).to.be.a("string");
+        pm.expect(b.status).to.eql(400);
+      });
+    language: text/javascript
+order: 2000

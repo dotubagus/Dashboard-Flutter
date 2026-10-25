@@ -1,0 +1,16 @@
+$kind: http-request
+description: "HATI-HATI: menghapus semua data dan mengisi ulang 5 course awal (id mulai dari 1). Isi variabel `adminToken` dengan nilai ADMIN_TOKEN di Vercel."
+url: "{{baseUrl}}/reset"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{adminToken}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      // 404 = ADMIN_TOKEN belum diset di Vercel (endpoint nonaktif)
+      // 401 = token salah, 200 = data kembali ke 5 course awal
+      pm.test("200, 401, atau 404", () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 404]));
+    language: text/javascript
+order: 1000

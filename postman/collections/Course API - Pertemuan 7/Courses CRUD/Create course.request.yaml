@@ -1,0 +1,34 @@
+$kind: http-request
+description: "Tahap 6: POST. `status` opsional (default `planned`). Mengembalikan 201 + object baru."
+url: "{{baseUrl}}/courses"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "code": "{{courseCode}}",
+      "title": "Testing REST API",
+      "credits": 2
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      // code unik per run agar tidak bentrok (409) dengan data lain
+      pm.collectionVariables.set("courseCode", "TST" + Date.now().toString().slice(-6));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status 201", () => pm.response.to.have.status(201));
+      pm.test("Bentuk Course sesuai model Dart", () => {
+        const c = pm.response.json();
+        pm.expect(c).to.include.keys("id", "code", "title", "credits", "status");
+        pm.expect(c.id).to.be.a("number");
+        pm.expect(c.credits).to.be.a("number");
+        pm.expect(["planned", "active", "done"]).to.include(c.status);
+      });
+      pm.test("Status default = planned", () => pm.expect(pm.response.json().status).to.eql("planned"));
+      pm.collectionVariables.set("courseId", pm.response.json().id);
+    language: text/javascript
+order: 3000

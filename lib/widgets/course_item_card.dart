@@ -59,7 +59,7 @@ class CourseItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$courseCode • ${course.credits} SKS',
+                      '$courseCode • ${course.credits} SKS • ${course.status}',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
