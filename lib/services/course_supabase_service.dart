@@ -18,28 +18,29 @@ class CourseSupabaseService implements CourseDataSource {
         .toList();
   }
 
-// Dewa Putu Bagus Mahadinata
-// NIM: 2415051023
+  // Dewa Putu Bagus Mahadinata
+  // NIM: 2415051023
   @override
-Future<Course> createCourse(Course course) async {
-  final row = await supabase
-      .from('courses')
-      .insert(course.toJson())
-      .select()
-      .single();
-  return Course.fromJson(row);
-}
+  Future<Course> createCourse(Course course) async {
+    final row = await supabase
+        .from('courses')
+        .insert(course.toJson())
+        .select()
+        .single();
+    return Course.fromJson(row);
+  }
 
-// Dewa Putu Bagus Mahadinata
-// NIM: 2415051023
-@override
-Future<void> updateCourse(int id, Course course) async {
-  await supabase
-      .from('courses')
-      .update(course.toJson())
-      .eq('id', id);
-}
-
+  // Dewa Putu Bagus Mahadinata
+  // NIM: 2415051023
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> updateCourse(int id, Course course) async {
+    await supabase.from('courses').update(course.toJson()).eq('id', id);
+  }
+
+  // Dewa Putu Bagus Mahadinata
+  // NIM: 2415051023
+  @override
+  Future<void> deleteCourse(int id) async {
+    await supabase.from('courses').delete().eq('id', id);
+  }
 }
